@@ -35,9 +35,9 @@ hmr.modifyAngular = function() {
             var exists = mod.serviceCache[recipeName];
             if (exists && getInjector()) {
                 mod.serviceCache[recipeName].resetObject();
-                var returnedValue = getInjector().invoke(serviceFunction, mod.serviceCache[recipeName]);
+                var returnedValue = getInjector().invoke(serviceFunction, mod.serviceCache[recipeName].$delegate);
                 if (returnedValue) {
-                    angular.extend(mod.serviceCache[recipeName], returnedValue);
+                    angular.extend(mod.serviceCache[recipeName].$delegate, returnedValue);
                 }
 
                 refreshState();
@@ -46,15 +46,16 @@ hmr.modifyAngular = function() {
                 mod.origAngularService(recipeName, serviceFunction);
                 mod.config(function($provide) {
                     $provide.decorator(recipeName, function($delegate) {
-                        $delegate.resetObject = function() {
-                            for (var prop in this) {
-                                if (prop !== 'resetObject') {
-                                    delete this[prop];
+                        var delegateContainer = {
+                            $delegate: $delegate,
+                            resetObject: function() {
+                                for (var prop in this.$delegate) {
+                                    delete this.$delegate[prop];
                                 }
                             }
                         };
-                        mod.serviceCache[recipeName] = $delegate;
-                        return mod.serviceCache[recipeName];
+                        mod.serviceCache[recipeName] = delegateContainer;
+                        return mod.serviceCache[recipeName].$delegate;
                     });
                 });
             }
@@ -67,7 +68,10 @@ hmr.modifyAngular = function() {
             if (exists && getInjector()) {
                 mod.serviceCache[recipeName].resetObject();
                 var returnedValue = getInjector().invoke(factoryFunction);
-                angular.extend(mod.serviceCache[recipeName], returnedValue);
+                if (returnedValue) {
+                    angular.extend(mod.serviceCache[recipeName], returnedValue);
+                }
+
 
                 refreshState();
             }
@@ -75,16 +79,16 @@ hmr.modifyAngular = function() {
                 mod.origAngularFactory(recipeName, factoryFunction);
                 mod.config(function($provide) {
                     $provide.decorator(recipeName, function($delegate) {
-                        $delegate.resetObject = function() {
-                            for (var prop in this) {
-                                if (prop !== 'resetObject') {
-                                    delete this[prop];
+                        var delegateContainer = {
+                            $delegate: $delegate,
+                            resetObject: function() {
+                                for (var prop in this) {
+                                    delete this.$delegate[prop];
                                 }
                             }
-                            this.resetObject = $delegate.resetObject;
                         };
-                        mod.serviceCache[recipeName] = $delegate;
-                        return mod.serviceCache[recipeName];
+                        mod.serviceCache[recipeName] = delegateContainer;
+                        return mod.serviceCache[recipeName].$delegate;
                     });
                 });
             }

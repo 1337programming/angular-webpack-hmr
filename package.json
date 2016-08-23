@@ -1,6 +1,6 @@
 {
   "name": "angular-webpack-hmr",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Angular 1 Hot Module Replacement for Webpack",
   "main": "index.js",
   "scripts": {
